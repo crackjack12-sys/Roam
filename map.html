@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Roam — Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <!-- Leaflet open-source map library — no API key needed -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #161616; --surface2: #1f1f1f; --border: #2a2a2a;
+      --text: #f0ede8; --muted: #888; --dim: #444; --accent: #c8f560;
+      --accent-dark: #0d0d0d; --green: #4ade80; --yellow: #fbbf24;
+      --orange: #fb923c; --radius: 14px; --radius-sm: 8px; --nav-h: 64px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; height: 100%; overflow: hidden; }
+    a { text-decoration: none; color: inherit; }
+
+    .app { max-width: 430px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; }
+
+    .header { padding: 52px 20px 12px; flex-shrink: 0; background: var(--bg); z-index: 10; }
+    .header h1 { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; margin-bottom: 2px; }
+    .header p { font-size: 13px; color: var(--muted); }
+
+    /* ── FILTER ROW ── */
+    .filter-row { display: flex; gap: 8px; padding: 0 20px 12px; overflow-x: auto; scrollbar-width: none; flex-shrink: 0; }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .chip { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border); background: transparent; color: var(--muted); }
+    .chip.active { border-color: var(--accent); color: var(--accent); background: rgba(200,245,96,0.08); }
+
+    /* ── MAP ── */
+    #map { flex: 1; width: 100%; z-index: 1; }
+
+    /* Override Leaflet tiles for dark look */
+    .leaflet-tile { filter: brightness(0.5) saturate(0.3) invert(1) hue-rotate(180deg); }
+    .leaflet-container { background: #0d0d0d; }
+
+    /* ── BOTTOM SHEET ── */
+    .sheet { position: absolute; bottom: var(--nav-h); left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: var(--surface); border-top: 1px solid var(--border); border-radius: var(--radius) var(--radius) 0 0; padding: 16px 20px; z-index: 20; display: none; }
+    .sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 14px; }
+    .sheet h3 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .sheet-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .sheet-tag { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 500; }
+    .t-free { background: rgba(74,222,128,0.12); color: var(--green); }
+    .t-cheap { background: rgba(251,191,36,0.12); color: var(--yellow); }
+    .t-paid { background: rgba(251,146,60,0.12); color: var(--orange); }
+    .t-open { background: rgba(74,222,128,0.1); color: var(--green); }
+    .t-closed { background: rgba(239,68,68,0.1); color: #ef4444; }
+    .sheet-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
+    .sheet-btn { display: block; width: 100%; background: var(--accent); color: var(--accent-dark); font-size: 14px; font-weight: 700; padding: 12px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-family: 'Syne', sans-serif; text-align: center; }
+
+    /* ── NAV ── */
+    .nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; height: var(--nav-h); background: rgba(13,13,13,0.95); backdrop-filter: blur(12px); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-around; padding: 0 10px; z-index: 100; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 16px; cursor: pointer; text-decoration: none; }
+    .nav-icon { font-size: 20px; line-height: 1; }
+    .nav-label { font-size: 10px; font-weight: 500; color: var(--muted); }
+    .nav-item.active .nav-label { color: var(--accent); }
+
+    /* Custom marker */
+    .roam-marker { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #0d0d0d; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; transition: transform 0.2s; }
+    .roam-marker:hover { transform: scale(1.15); }
+    .marker-free { background: #4ade80; }
+    .marker-cheap { background: #fbbf24; }
+    .marker-paid { background: #fb923c; }
+    .marker-featured { background: #c8f560; border-color: #fff; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Map</h1>
+    <p>Tap a pin to see details</p>
+  </div>
+  <div class="filter-row" id="filterRow">
+    <div class="chip active" data-filter="all">All</div>
+    <div class="chip" data-filter="free">🟢 Free</div>
+    <div class="chip" data-filter="cheap">🟡 Under $10</div>
+    <div class="chip" data-filter="paid">🔴 Paid</div>
+  </div>
+  <div id="map"></div>
+
+  <!-- Bottom sheet popup -->
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="sheetName"></h3>
+    <div class="sheet-meta" id="sheetMeta"></div>
+    <p class="sheet-desc" id="sheetDesc"></p>
+    <a class="sheet-btn" id="sheetBtn">View full details →</a>
+  </div>
+</div>
+
+<nav class="nav">
+  <a href="index.html" class="nav-item"><span class="nav-icon">⚡</span><span class="nav-label">Today</span></a>
+  <a href="browse.html" class="nav-item"><span class="nav-icon">🗂</span><span class="nav-label">Browse</span></a>
+  <a href="map.html" class="nav-item active"><span class="nav-icon">🗺</span><span class="nav-label">Map</span></a>
+  <a href="saved.html" class="nav-item"><span class="nav-icon">🔖</span><span class="nav-label">Saved</span></a>
+</nav>
+
+<script>
+  // Init map centered on Bethesda
+  const map = L.map('map', { zoomControl: false }).setView([38.9848, -77.0947], 13);
+
+  // OpenStreetMap tiles (free, no API key needed)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Add zoom control to bottom-right
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+  let allListings = [];
+  let markers = [];
+  let activeFilter = 'all';
+
+  function markerColor(l) {
+    if (l.featured) return 'marker-featured';
+    if (l.priceTier === 'free') return 'marker-free';
+    if (l.priceTier === 'cheap') return 'marker-cheap';
+    return 'marker-paid';
+  }
+
+  function tagClass(tier) {
+    return tier === 'free' ? 't-free' : tier === 'cheap' ? 't-cheap' : 't-paid';
+  }
+
+  function showSheet(listing) {
+    document.getElementById('sheetName').textContent = listing.name;
+    document.getElementById('sheetMeta').innerHTML = `
+      <span class="sheet-tag ${tagClass(listing.priceTier)}">${listing.priceLabel}</span>
+      <span class="sheet-tag ${listing.isOpenNow ? 't-open' : 't-closed'}">${listing.isOpenNow ? '● Open' : '○ Closed'}</span>
+      <span class="sheet-tag" style="background:var(--surface2);color:var(--muted)">${listing.category}</span>
+    `;
+    document.getElementById('sheetDesc').textContent = listing.description || '';
+    document.getElementById('sheetBtn').href = `detail.html?id=${listing.id}`;
+    document.getElementById('sheet').style.display = 'block';
+  }
+
+  function renderMarkers(listings) {
+    // Clear existing
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+
+    const filtered = activeFilter === 'all' ? listings
+      : listings.filter(l => l.priceTier === activeFilter);
+
+    filtered.forEach(listing => {
+      if (!listing.lat || !listing.lng) return;
+
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="roam-marker ${markerColor(listing)}">${listing.featured ? '★' : ''}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+
+      const marker = L.marker([listing.lat, listing.lng], { icon }).addTo(map);
+      marker.on('click', () => showSheet(listing));
+      markers.push(marker);
+    });
+  }
+
+  // Hide sheet when clicking map
+  map.on('click', () => {
+    document.getElementById('sheet').style.display = 'none';
+  });
+
+  // Filter chips
+  document.getElementById('filterRow').addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    activeFilter = chip.dataset.filter;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    renderMarkers(allListings);
+    document.getElementById('sheet').style.display = 'none';
+  });
+
+  fetch('listings.json')
+    .then(r => r.json())
+    .then(data => { allListings = data; renderMarkers(data); });
+</script>
+</body>
+</html>

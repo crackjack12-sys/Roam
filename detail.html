@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Roam — Detail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #161616; --surface2: #1f1f1f; --border: #2a2a2a;
+      --text: #f0ede8; --muted: #888; --dim: #444; --accent: #c8f560;
+      --accent-dark: #0d0d0d; --gold: #f5c842; --green: #4ade80;
+      --yellow: #fbbf24; --orange: #fb923c; --radius: 14px; --radius-sm: 8px; --nav-h: 64px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+    a { text-decoration: none; color: inherit; }
+    .app { max-width: 430px; margin: 0 auto; padding-bottom: calc(var(--nav-h) + 20px); }
+
+    /* ── TOP BAR ── */
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 52px 20px 16px; }
+    .back-btn { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); cursor: pointer; }
+    .back-arrow { font-size: 20px; line-height: 1; }
+    .save-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; transition: all 0.2s; }
+    .save-btn.saved { background: rgba(200,245,96,0.1); border-color: var(--accent); }
+
+    /* ── HERO ── */
+    .hero { margin: 0 20px; border-radius: var(--radius); background: var(--surface2); height: 180px; display: flex; align-items: center; justify-content: center; font-size: 60px; position: relative; overflow: hidden; }
+    .hero-img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius); }
+    .sponsored-strip { position: absolute; bottom: 10px; right: 10px; background: rgba(200,245,96,0.15); border: 1px solid rgba(200,245,96,0.3); color: var(--accent); font-size: 10px; font-weight: 600; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 6px; }
+
+    /* ── BODY ── */
+    .body { padding: 16px 20px 0; }
+    .title-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; gap: 12px; }
+    .title-row h1 { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; line-height: 1.2; }
+    .open-badge { flex-shrink: 0; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+    .open-badge.open { background: rgba(74,222,128,0.12); color: var(--green); }
+    .open-badge.closed { background: rgba(239,68,68,0.12); color: #ef4444; }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .tag { font-size: 11px; padding: 4px 10px; border-radius: 6px; font-weight: 500; }
+    .tag-free { background: rgba(74,222,128,0.12); color: var(--green); }
+    .tag-cheap { background: rgba(251,191,36,0.12); color: var(--yellow); }
+    .tag-paid { background: rgba(251,146,60,0.12); color: var(--orange); }
+    .tag-neutral { background: var(--surface2); color: var(--muted); }
+
+    .desc { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 18px; }
+
+    /* ── INFO GRID ── */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+    .info-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; }
+    .info-box .label { font-size: 11px; color: var(--dim); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .info-box .value { font-size: 14px; font-weight: 500; color: var(--text); }
+
+    /* ── HOURS ── */
+    .hours-section { margin-bottom: 20px; }
+    .hours-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .hours-row { display: flex; justify-content: space-between; font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .hours-row:last-child { border-bottom: none; }
+    .hours-row .day { color: var(--muted); }
+    .hours-row .time { color: var(--text); }
+    .hours-row.today .day { color: var(--accent); font-weight: 600; }
+    .hours-row.today .time { color: var(--accent); }
+
+    /* ── CTA ── */
+    .cta-area { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; padding: 12px 20px 24px; background: linear-gradient(to top, var(--bg) 60%, transparent); z-index: 100; }
+    .cta-btn { width: 100%; background: var(--accent); color: var(--accent-dark); font-size: 15px; font-weight: 700; padding: 14px; border-radius: var(--radius); border: none; cursor: pointer; font-family: 'Syne', sans-serif; letter-spacing: 0.02em; transition: opacity 0.2s; }
+    .cta-btn:active { opacity: 0.85; }
+    .cta-secondary { width: 100%; background: transparent; color: var(--muted); font-size: 13px; padding: 10px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; margin-top: 4px; }
+    .sponsored-note { text-align: center; font-size: 10px; color: var(--dim); margin-top: 4px; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .animate { animation: fadeUp 0.35s ease both; }
+    .delay-1 { animation-delay: 0.05s; } .delay-2 { animation-delay: 0.1s; } .delay-3 { animation-delay: 0.15s; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar animate">
+    <div class="back-btn" onclick="history.back()">
+      <span class="back-arrow">‹</span> Back
+    </div>
+    <div class="save-btn" id="saveBtn" onclick="toggleSave()">🔖</div>
+  </div>
+
+  <div class="hero animate delay-1" id="hero">
+    <span id="heroIcon">📍</span>
+  </div>
+
+  <div class="body animate delay-2" id="bodyContent">
+    <div style="color: var(--muted); text-align:center; padding: 40px;">Loading...</div>
+  </div>
+</div>
+
+<div class="cta-area animate delay-3" id="ctaArea" style="display:none;">
+  <button class="cta-btn" id="ctaBtn">View details</button>
+  <button class="cta-secondary" id="directionsBtn">Get directions →</button>
+  <div class="sponsored-note" id="sponsoredNote" style="display:none;">Sponsored listing</div>
+</div>
+
+<script>
+  const ICONS = {
+    'Outdoors':'🌳','Education':'📚','Arts':'🎨','Activities':'🎯',
+    'Entertainment':'🎬','Fitness':'🏊','Sports':'⚽','Food':'🍔','default':'📍'
+  };
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const todayName = days[new Date().getDay()];
+
+  // Get listing ID from URL
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+
+  // Saved state
+  const saved = JSON.parse(localStorage.getItem('roam_saved') || '[]');
+  function toggleSave() {
+    const btn = document.getElementById('saveBtn');
+    const idx = saved.indexOf(id);
+    if (idx > -1) { saved.splice(idx, 1); btn.classList.remove('saved'); btn.textContent = '🔖'; }
+    else { saved.push(id); btn.classList.add('saved'); btn.textContent = '✅'; }
+    localStorage.setItem('roam_saved', JSON.stringify(saved));
+  }
+  if (saved.includes(id)) {
+    document.getElementById('saveBtn').classList.add('saved');
+    document.getElementById('saveBtn').textContent = '✅';
+  }
+
+  function priceTagClass(tier) {
+    return tier === 'free' ? 'tag-free' : tier === 'cheap' ? 'tag-cheap' : 'tag-paid';
+  }
+
+  fetch('listings.json')
+    .then(r => r.json())
+    .then(data => {
+      const listing = data.find(l => l.id === id);
+      if (!listing) {
+        document.getElementById('bodyContent').innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted)">Listing not found</div>';
+        return;
+      }
+
+      // Update page title
+      document.title = `Roam — ${listing.name}`;
+
+      // Hero icon
+      document.getElementById('heroIcon').textContent = ICONS[listing.category] || ICONS.default;
+
+      // Sponsored strip
+      if (listing.sponsored) {
+        const strip = document.createElement('div');
+        strip.className = 'sponsored-strip';
+        strip.textContent = 'FEATURED';
+        document.querySelector('.hero').appendChild(strip);
+      }
+
+      // Build hours rows
+      let hoursHTML = '';
+      if (listing.hoursToday && listing.hoursToday.length > 0) {
+        hoursHTML = `<div class="hours-section">
+          <div class="hours-title">Hours</div>
+          ${listing.hoursToday.map(row => {
+            const [day, ...rest] = row.split(': ');
+            const isToday = row.toLowerCase().includes(todayName.toLowerCase());
+            return `<div class="hours-row${isToday ? ' today' : ''}">
+              <span class="day">${day}</span>
+              <span class="time">${rest.join(': ') || 'Closed'}</span>
+            </div>`;
+          }).join('')}
+        </div>`;
+      }
+
+      // Render body
+      document.getElementById('bodyContent').innerHTML = `
+        <div class="title-row">
+          <h1>${listing.name}</h1>
+          <span class="open-badge ${listing.isOpenNow ? 'open' : 'closed'}">${listing.isOpenNow ? '● Open' : '○ Closed'}</span>
+        </div>
+        <div class="tags">
+          <span class="tag ${priceTagClass(listing.priceTier)}">${listing.priceLabel}</span>
+          <span class="tag tag-neutral">${listing.category}</span>
+          ${listing.rating ? `<span class="tag tag-neutral">★ ${listing.rating} (${listing.reviewCount})</span>` : ''}
+        </div>
+        <p class="desc">${listing.description || 'No description available.'}</p>
+        <div class="info-grid">
+          <div class="info-box"><div class="label">Address</div><div class="value">${listing.address.split(',')[0]}</div></div>
+          <div class="info-box"><div class="label">Status</div><div class="value">${listing.isOpenNow ? 'Open now' : 'Closed'}</div></div>
+          ${listing.phone ? `<div class="info-box"><div class="label">Phone</div><div class="value">${listing.phone}</div></div>` : ''}
+          ${listing.priceLabel ? `<div class="info-box"><div class="label">Price</div><div class="value">${listing.priceLabel}</div></div>` : ''}
+        </div>
+        ${hoursHTML}
+        <div style="height: 120px;"></div>
+      `;
+
+      // CTA
+      const ctaArea = document.getElementById('ctaArea');
+      const ctaBtn = document.getElementById('ctaBtn');
+      const dirBtn = document.getElementById('directionsBtn');
+      const sponsoredNote = document.getElementById('sponsoredNote');
+
+      ctaArea.style.display = 'block';
+      ctaBtn.textContent = (listing.sponsoredCta || 'Visit website') + ' →';
+      ctaBtn.onclick = () => {
+        if (listing.website) window.open(listing.website, '_blank');
+      };
+      dirBtn.onclick = () => {
+        const q = encodeURIComponent(listing.address);
+        window.open(`https://maps.google.com/?q=${q}`, '_blank');
+      };
+      if (listing.sponsored) sponsoredNote.style.display = 'block';
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+# ============================================================
+# Roam — Daily Listings Update + Auto Deploy
+# ============================================================
+# What this workflow does:
+#   1. Runs every morning at 7am ET (11:00 UTC)
+#   2. Runs the Google Places script to refresh listings.json
+#   3. Commits the updated listings.json back to GitHub
+#   4. Triggers a fresh Netlify deploy automatically
+#
+# You can also trigger it manually anytime from the
+# GitHub Actions tab in your repo.
+# ============================================================
+
+name: Daily Listings Refresh
+
+on:
+  # ── SCHEDULED TRIGGER ──
+  # Cron format: minute hour day month weekday
+  # "0 11 * * *" = every day at 11:00 UTC = 7:00am ET
+  schedule:
+    - cron: "0 11 * * *"
+
+  # ── MANUAL TRIGGER ──
+  # Lets you run this from GitHub Actions tab anytime
+  workflow_dispatch:
+
+jobs:
+  refresh-listings:
+    # Use the latest Ubuntu runner (free on GitHub Actions)
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── STEP 1: Check out your repo ──
+      # This downloads your repo files onto the runner machine
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── STEP 2: Set up Python ──
+      # Installs Python 3.11 on the runner
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ── STEP 3: Install dependencies ──
+      # Installs the "requests" library your script needs
+      - name: Install Python dependencies
+        run: pip install requests
+
+      # ── STEP 4: Run the Google Places script ──
+      # This is the key step — it calls the Google Places API
+      # and overwrites listings.json with fresh data.
+      #
+      # GOOGLE_PLACES_KEY is read from your GitHub repo secrets.
+      # You set this up once in:
+      #   GitHub repo → Settings → Secrets and variables → Actions
+      #   → New repository secret → Name: GOOGLE_PLACES_KEY
+      - name: Fetch fresh listings from Google Places
+        env:
+          GOOGLE_PLACES_KEY: ${{ secrets.GOOGLE_PLACES_KEY }}
+        run: python google_places.py
+
+      # ── STEP 5: Commit the updated listings.json ──
+      # If the script found new or changed listings, this
+      # commits and pushes listings.json back to your repo.
+      # If nothing changed, this step is safely skipped.
+      - name: Commit updated listings
+        run: |
+          git config user.name "Roam Bot"
+          git config user.email "roam-bot@users.noreply.github.com"
+          git add listings.json
+          # Only commit if listings.json actually changed
+          git diff --staged --quiet || git commit -m "🗺 Daily listings refresh $(date +'%Y-%m-%d')"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── STEP 6: Trigger Netlify deploy ──
+      # After pushing the new listings.json, this tells
+      # Netlify to redeploy your site so users see fresh data.
+      #
+      # NETLIFY_DEPLOY_HOOK is a webhook URL from Netlify.
+      # Get it from:
+      #   Netlify → Your site → Site configuration
+      #   → Build & deploy → Build hooks → Add build hook
+      #   Name it "Daily refresh" and copy the URL
+      - name: Trigger Netlify redeploy
+        run: |
+          curl -s -X POST "${{ secrets.NETLIFY_DEPLOY_HOOK }}"
+          echo "Netlify deploy triggered"

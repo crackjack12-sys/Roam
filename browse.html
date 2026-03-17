@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Roam — Browse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0d0d; --surface: #161616; --surface2: #1f1f1f; --border: #2a2a2a;
+      --text: #f0ede8; --muted: #888; --dim: #444; --accent: #c8f560;
+      --accent-dark: #0d0d0d; --gold: #f5c842; --green: #4ade80;
+      --yellow: #fbbf24; --orange: #fb923c; --radius: 14px; --radius-sm: 8px; --nav-h: 64px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+    a { text-decoration: none; color: inherit; }
+    .app { max-width: 430px; margin: 0 auto; padding-bottom: calc(var(--nav-h) + 20px); }
+
+    .header { padding: 52px 20px 16px; }
+    .header h1 { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; margin-bottom: 4px; }
+    .header p { font-size: 13px; color: var(--muted); }
+
+    /* ── SEARCH ── */
+    .search-wrap { padding: 0 20px 16px; }
+    .search-box { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; }
+    .search-icon { font-size: 14px; color: var(--dim); }
+    .search-box input { flex: 1; background: none; border: none; outline: none; font-size: 14px; color: var(--text); font-family: 'DM Sans', sans-serif; }
+    .search-box input::placeholder { color: var(--dim); }
+
+    /* ── PRICE SECTIONS ── */
+    .price-section { padding: 0 20px; margin-bottom: 24px; }
+    .price-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .price-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .dot-free { background: var(--green); }
+    .dot-cheap { background: var(--yellow); }
+    .dot-paid { background: var(--orange); }
+    .price-header-text { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+    .price-count { margin-left: auto; font-size: 12px; color: var(--dim); }
+
+    .mini-card { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+    .mini-card:active { background: var(--surface2); transform: scale(0.98); }
+    .mini-card.closed { opacity: 0.4; }
+    .mini-left h4 { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+    .mini-left p { font-size: 11px; color: var(--muted); }
+    .mini-right { display: flex; align-items: center; gap: 8px; }
+    .mini-price { font-size: 12px; font-weight: 600; }
+    .p-free { color: var(--green); }
+    .p-cheap { color: var(--yellow); }
+    .p-paid { color: var(--orange); }
+    .mini-chevron { color: var(--dim); font-size: 16px; }
+
+    .section-divider { height: 1px; background: var(--border); margin: 0 20px 24px; }
+
+    /* ── EMPTY / NO RESULTS ── */
+    .no-results { text-align: center; padding: 40px 20px; color: var(--muted); }
+
+    /* ── NAV ── */
+    .nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; height: var(--nav-h); background: rgba(13,13,13,0.95); backdrop-filter: blur(12px); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-around; padding: 0 10px; z-index: 100; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 16px; cursor: pointer; text-decoration: none; }
+    .nav-icon { font-size: 20px; line-height: 1; }
+    .nav-label { font-size: 10px; font-weight: 500; color: var(--muted); }
+    .nav-item.active .nav-label { color: var(--accent); }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .animate { animation: fadeUp 0.35s ease both; }
+    .delay-1 { animation-delay: 0.05s; } .delay-2 { animation-delay: 0.1s; } .delay-3 { animation-delay: 0.15s; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="header animate">
+    <h1>Browse</h1>
+    <p>All activities in Bethesda & MoCo</p>
+  </div>
+
+  <div class="search-wrap animate delay-1">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search activities..." oninput="filterSearch()" />
+    </div>
+  </div>
+
+  <div id="sections" class="animate delay-2"></div>
+</div>
+
+<nav class="nav">
+  <a href="index.html" class="nav-item">
+    <span class="nav-icon">⚡</span><span class="nav-label">Today</span>
+  </a>
+  <a href="browse.html" class="nav-item active">
+    <span class="nav-icon">🗂</span><span class="nav-label">Browse</span>
+  </a>
+  <a href="map.html" class="nav-item">
+    <span class="nav-icon">🗺</span><span class="nav-label">Map</span>
+  </a>
+  <a href="saved.html" class="nav-item">
+    <span class="nav-icon">🔖</span><span class="nav-label">Saved</span>
+  </a>
+</nav>
+
+<script>
+  let allListings = [];
+
+  function renderSections(listings) {
+    const container = document.getElementById('sections');
+    const tiers = [
+      { key: 'free',  label: 'Free',      dotClass: 'dot-free',  priceClass: 'p-free'  },
+      { key: 'cheap', label: 'Under $10', dotClass: 'dot-cheap', priceClass: 'p-cheap' },
+      { key: 'paid',  label: 'Paid',      dotClass: 'dot-paid',  priceClass: 'p-paid'  },
+    ];
+
+    let html = '';
+    tiers.forEach((tier, i) => {
+      const items = listings.filter(l => l.priceTier === tier.key);
+      if (items.length === 0) return;
+      const open = items.filter(l => l.isOpenNow);
+      html += `
+        <div class="price-section">
+          <div class="price-header">
+            <div class="price-dot ${tier.dotClass}"></div>
+            <span class="price-header-text">${tier.label}</span>
+            <span class="price-count">${open.length} open today</span>
+          </div>
+          ${[...items.filter(l => l.isOpenNow), ...items.filter(l => !l.isOpenNow)].map(l => `
+            <a href="detail.html?id=${l.id}" class="mini-card${l.isOpenNow ? '' : ' closed'}">
+              <div class="mini-left">
+                <h4>${l.name}</h4>
+                <p>${l.category} · ${l.isOpenNow ? 'Open now' : 'Closed'}</p>
+              </div>
+              <div class="mini-right">
+                <span class="mini-price ${tier.priceClass}">${l.priceLabel}</span>
+                <span class="mini-chevron">›</span>
+              </div>
+            </a>`).join('')}
+        </div>
+        ${i < tiers.length - 1 ? '<div class="section-divider"></div>' : ''}
+      `;
+    });
+
+    if (!html) {
+      html = '<div class="no-results">No results found</div>';
+    }
+    container.innerHTML = html;
+  }
+
+  function filterSearch() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    if (!q) { renderSections(allListings); return; }
+    const filtered = allListings.filter(l =>
+      l.name.toLowerCase().includes(q) ||
+      l.category.toLowerCase().includes(q) ||
+      (l.description || '').toLowerCase().includes(q)
+    );
+    renderSections(filtered);
+  }
+
+  fetch('listings.json')
+    .then(r => r.json())
+    .then(data => { allListings = data; renderSections(data); });
+</script>
+</body>
+</html>
