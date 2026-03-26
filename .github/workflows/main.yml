@@ -1,0 +1,48 @@
+# ============================================================
+# Roam — Daily Listings Refresh (Free — No API Key Needed)
+# ============================================================
+# Runs every morning at 7am ET using the free Overpass API.
+# No secrets or API keys required at all.
+# ============================================================
+
+name: Daily Listings Refresh
+
+on:
+  schedule:
+    - cron: "0 11 * * *"   # 11:00 UTC = 7:00am ET every day
+
+  workflow_dispatch:        # Also lets you trigger manually anytime
+
+jobs:
+  refresh-listings:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Fetch fresh listings from Overpass API
+        run: python overpass_fetch.py
+
+      - name: Commit updated listings
+        run: |
+          git config user.name "Roam Bot"
+          git config user.email "roam-bot@users.noreply.github.com"
+          git add listings.json
+          git diff --staged --quiet || git commit -m "🗺 Daily listings refresh $(date +'%Y-%m-%d')"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger Netlify redeploy
+        run: |
+          curl -s -X POST "${{ secrets.NETLIFY_DEPLOY_HOOK }}"
+          echo "Netlify deploy triggered"
