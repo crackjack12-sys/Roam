@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roam — Spin for Something to Do</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --border: rgba(255,255,255,0.07);
+      --text: #f0f0f5;
+      --muted: #6b6b80;
+      --accent: #ff5c35;
+      --accent2: #ffb347;
+      --green: #3dffa0;
+      --blue: #5c9eff;
+      --purple: #b47aff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* glow blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .blob-1 { width: 500px; height: 500px; background: var(--accent); top: -150px; right: -100px; }
+    .blob-2 { width: 400px; height: 400px; background: var(--purple); bottom: -100px; left: -100px; }
+
+    nav {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 40px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--accent); }
+
+    .back-link {
+      font-size: 14px;
+      color: var(--muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--text); }
+
+    /* ── MAIN LAYOUT ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    /* ── LEFT PANEL — FILTERS ── */
+    .filters-panel {
+      position: sticky;
+      top: 24px;
+    }
+
+    .panel-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .filter-group {
+      margin-bottom: 28px;
+    }
+
+    .filter-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      padding: 7px 14px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .chip:hover {
+      border-color: rgba(255,255,255,0.2);
+      color: var(--text);
+    }
+
+    .chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .chip[data-type="price"].active   { background: var(--green);  border-color: var(--green);  color: #000; }
+    .chip[data-type="vibe"].active    { background: var(--purple); border-color: var(--purple); color: #fff; }
+    .chip[data-type="setting"].active { background: var(--blue);   border-color: var(--blue);   color: #fff; }
+
+    .count-bar {
+      margin-top: 24px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .count-bar strong { color: var(--text); font-weight: 600; }
+
+    .spin-btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.01em;
+    }
+    .spin-btn:hover { background: #ff7455; transform: translateY(-1px); }
+    .spin-btn:active { transform: translateY(0); }
+    .spin-btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; }
+
+    /* ── RIGHT PANEL — WHEEL ── */
+    .wheel-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .wheel-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      text-align: center;
+      line-height: 1.1;
+    }
+    .wheel-title span { color: var(--accent); }
+
+    .wheel-wrap {
+      position: relative;
+      width: 420px;
+      height: 420px;
+    }
+
+    #wheel-canvas {
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      display: block;
+    }
+
+    /* pointer triangle */
+    .wheel-pointer {
+      position: absolute;
+      top: 50%;
+      right: -18px;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-top: 18px solid transparent;
+      border-bottom: 18px solid transparent;
+      border-right: 32px solid var(--accent);
+      filter: drop-shadow(0 0 8px rgba(255,92,53,0.6));
+    }
+
+    /* center cap */
+    .wheel-cap {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 3px solid rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      z-index: 5;
+    }
+
+    /* empty state */
+    .empty-wheel {
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      border: 2px dashed var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 15px;
+      text-align: center;
+      padding: 40px;
+    }
+    .empty-wheel .emoji { font-size: 40px; }
+
+    /* ── RESULT CARD ── */
+    .result-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .result-overlay.show { display: flex; }
+
+    .result-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 480px;
+      width: 100%;
+      position: relative;
+      animation: cardIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: scale(0.85) translateY(20px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .result-tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 100px;
+      background: rgba(255,92,53,0.15);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .result-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
+
+    .result-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .result-meta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .meta-pill {
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      font-size: 12px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      flex: 1;
+      padding: 13px;
+      border-radius: 12px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #ff7455; }
+
+    .btn-secondary {
+      padding: 13px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+    .close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .close-btn:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 780px) {
+      .page {
+        grid-template-columns: 1fr;
+        padding: 24px 16px 60px;
+        gap: 32px;
+      }
+      .filters-panel { position: static; }
+      .wheel-wrap, #wheel-canvas, .empty-wheel {
+        width: 300px;
+        height: 300px;
+      }
+      nav { padding: 18px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<nav>
+  <a href="index.html" class="logo">Ro<span>a</span>m</a>
+  <a href="index.html" class="back-link">← Back to listings</a>
+</nav>
+
+<div class="page">
+
+  <!-- LEFT: FILTERS -->
+  <div class="filters-panel">
+    <p class="panel-title">Filters</p>
+
+    <div class="filter-group">
+      <span class="filter-label">Vibe</span>
+      <div class="chip-row">
+        <div class="chip" data-type="vibe" data-value="chill">😌 Chill</div>
+        <div class="chip" data-type="vibe" data-value="active">⚡ Active</div>
+        <div class="chip" data-type="vibe" data-value="artsy">🎭 Artsy</div>
+        <div class="chip" data-type="vibe" data-value="food">🍔 Food</div>
+        <div class="chip" data-type="vibe" data-value="unique">✨ Unique</div>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <span class="filter-label">Price</span>
+      <div class="chip-row">
+        <div class="chip" data-type="price" data-value="free">🆓 Free</div>
+        <div class="chip" data-type="price" data-value="cheap">💸 Cheap</div>
+        <div class="chip" data-type="price" data-value="paid">💳 Paid</div>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <span class="filter-label">Setting</span>
+      <div class="chip-row">
+        <div class="chip" data-type="setting" data-value="indoor">🏠 Indoor</div>
+        <div class="chip" data-type="setting" data-value="outdoor">🌿 Outdoor</div>
+      </div>
+    </div>
+
+    <div class="count-bar" id="count-bar">
+      <strong id="match-count">—</strong> activities match your filters
+    </div>
+
+    <button class="spin-btn" id="spin-btn" disabled>Spin the Wheel 🎰</button>
+  </div>
+
+  <!-- RIGHT: WHEEL -->
+  <div class="wheel-panel">
+    <h1 class="wheel-title">Not sure what<br>to do? <span>Spin it.</span></h1>
+
+    <div class="wheel-wrap" id="wheel-wrap">
+      <div class="empty-wheel" id="empty-state">
+        <span class="emoji">🎯</span>
+        <span>Pick some filters and<br>we'll load the wheel</span>
+      </div>
+      <canvas id="wheel-canvas" style="display:none;"></canvas>
+      <div class="wheel-pointer" id="pointer" style="display:none;"></div>
+      <div class="wheel-cap" id="cap" style="display:none;">🎲</div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT OVERLAY -->
+<div class="result-overlay" id="result-overlay">
+  <div class="result-card" id="result-card">
+    <button class="close-btn" id="close-btn">✕</button>
+    <div class="result-tag" id="result-tag">Activities</div>
+    <div class="result-name" id="result-name">Escape Quest</div>
+    <div class="result-desc" id="result-desc">Description here</div>
+    <div class="result-meta" id="result-meta"></div>
+    <div class="result-actions">
+      <a href="#" class="btn-primary" id="result-link" target="_blank">Check it out →</a>
+      <button class="btn-secondary" id="spin-again-btn">Spin again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── VIBE MAP: category → vibe tags ──
+const VIBE_MAP = {
+  "Chill":         ["chill"],
+  "Outdoors":      ["active", "outdoor"],
+  "Activities":    ["active"],
+  "Entertainment": ["chill", "indoor"],
+  "Arts":          ["artsy"],
+  "Food":          ["food"],
+  "Seasonal":      ["unique", "outdoor"],
+  "Unique":        ["unique"],
+  "Culture":       ["artsy", "chill"],
+  "Fitness":       ["active"],
+};
+
+// setting map
+const SETTING_MAP = {
+  "Chill":         "indoor",
+  "Outdoors":      "outdoor",
+  "Activities":    "indoor",
+  "Entertainment": "indoor",
+  "Arts":          "indoor",
+  "Food":          "outdoor",
+  "Seasonal":      "outdoor",
+  "Unique":        "indoor",
+  "Culture":       "outdoor",
+  "Fitness":       "indoor",
+};
+
+// wheel colors
+const COLORS = [
+  "#ff5c35","#ff8c55","#ffb347","#ffd166",
+  "#06d6a0","#3dffa0","#5c9eff","#b47aff",
+  "#ff6b9d","#c77dff","#4cc9f0","#f72585"
+];
+
+let listings = [];
+let filtered = [];
+let currentAngle = 0;
+let spinning = false;
+
+const activeFilters = { vibe: [], price: [], setting: [] };
+
+// ── FETCH LISTINGS ──
+fetch('listings.json')
+  .then(r => r.json())
+  .then(data => {
+    listings = data;
+    updateFiltered();
+  })
+  .catch(() => {
+    // fallback sample data so wheel still works
+    listings = [
+      { name: "Escape Quest", category: "Activities", priceTier: "paid", description: "Do a booked escape room with friends at Escape Quest.", website: "https://www.escapequest.com", priceLabel: "From $28/person" },
+      { name: "Bowlero", category: "Activities", priceTier: "paid", description: "Glow bowling, arcade games, and late nights in Bethesda.", website: "https://www.bowlero.com", priceLabel: "$20–$27" },
+      { name: "National Mall at Night", category: "Chill", priceTier: "free", description: "Walk from Lincoln Memorial to Washington Monument at night.", website: "https://www.nps.gov/nama", priceLabel: "Free" },
+    ];
+    updateFiltered();
+  });
+
+// ── CHIP INTERACTION ──
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const type = chip.dataset.type;
+    const val  = chip.dataset.value;
+    const idx  = activeFilters[type].indexOf(val);
+
+    if (idx === -1) {
+      activeFilters[type].push(val);
+      chip.classList.add('active');
+    } else {
+      activeFilters[type].splice(idx, 1);
+      chip.classList.remove('active');
+    }
+    updateFiltered();
+  });
+});
+
+function updateFiltered() {
+  filtered = listings.filter(l => {
+    const vibes   = VIBE_MAP[l.category]   || [];
+    const setting = SETTING_MAP[l.category] || "indoor";
+
+    const vibeOk    = activeFilters.vibe.length    === 0 || activeFilters.vibe.some(v => vibes.includes(v));
+    const priceOk   = activeFilters.price.length   === 0 || activeFilters.price.includes(l.priceTier);
+    const settingOk = activeFilters.setting.length === 0 || activeFilters.setting.includes(setting);
+
+    return vibeOk && priceOk && settingOk;
+  });
+
+  document.getElementById('match-count').textContent = filtered.length;
+  const btn = document.getElementById('spin-btn');
+
+  if (filtered.length >= 2) {
+    btn.disabled = false;
+    drawWheel(filtered);
+    document.getElementById('empty-state').style.display  = 'none';
+    document.getElementById('wheel-canvas').style.display = 'block';
+    document.getElementById('pointer').style.display      = 'block';
+    document.getElementById('cap').style.display          = 'flex';
+  } else {
+    btn.disabled = true;
+    document.getElementById('empty-state').style.display  = 'flex';
+    document.getElementById('wheel-canvas').style.display = 'none';
+    document.getElementById('pointer').style.display      = 'none';
+    document.getElementById('cap').style.display          = 'none';
+  }
+}
+
+// ── DRAW WHEEL ──
+function drawWheel(items, highlightIndex = -1) {
+  const canvas = document.getElementById('wheel-canvas');
+  const size   = canvas.offsetWidth || 420;
+  canvas.width  = size * window.devicePixelRatio;
+  canvas.height = size * window.devicePixelRatio;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+  const cx  = size / 2;
+  const cy  = size / 2;
+  const r   = size / 2 - 4;
+  const arc = (2 * Math.PI) / items.length;
+
+  items.forEach((item, i) => {
+    const startAngle = currentAngle + i * arc;
+    const endAngle   = startAngle + arc;
+
+    // segment
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = i === highlightIndex
+      ? '#ffffff'
+      : COLORS[i % COLORS.length];
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+    ctx.lineWidth   = 1.5;
+    ctx.stroke();
+
+    // label
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(startAngle + arc / 2);
+    ctx.textAlign    = 'right';
+    ctx.fillStyle    = i === highlightIndex ? '#000' : 'rgba(0,0,0,0.75)';
+    ctx.font         = `bold ${Math.max(10, Math.min(13, 200 / items.length))}px 'DM Sans', sans-serif`;
+    ctx.fillText(truncate(item.name, 18), r - 12, 4);
+    ctx.restore();
+  });
+
+  // outer ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth   = 2;
+  ctx.stroke();
+}
+
+function truncate(str, max) {
+  return str.length > max ? str.slice(0, max - 1) + '…' : str;
+}
+
+// ── SPIN ──
+document.getElementById('spin-btn').addEventListener('click', spinWheel);
+document.getElementById('spin-again-btn').addEventListener('click', () => {
+  document.getElementById('result-overlay').classList.remove('show');
+  setTimeout(spinWheel, 300);
+});
+
+function spinWheel() {
+  if (spinning || filtered.length < 2) return;
+  spinning = true;
+  document.getElementById('spin-btn').disabled = true;
+
+  const totalSpins  = 6 + Math.random() * 6;          // 6–12 full rotations
+  const extraAngle  = Math.random() * 2 * Math.PI;
+  const targetAngle = currentAngle - (totalSpins * 2 * Math.PI + extraAngle);
+
+  const duration    = 3500;
+  const start       = performance.now();
+  const startAngle  = currentAngle;
+
+  function easeOut(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function animate(now) {
+    const elapsed  = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    currentAngle   = startAngle + (targetAngle - startAngle) * easeOut(progress);
+
+    drawWheel(filtered);
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      currentAngle = targetAngle % (2 * Math.PI);
+      // figure out which segment the pointer (pointing left, at angle π) landed on
+      const arc     = (2 * Math.PI) / filtered.length;
+      const pointer = (Math.PI - currentAngle + 2 * Math.PI) % (2 * Math.PI);
+      const winner  = Math.floor(pointer / arc) % filtered.length;
+
+      drawWheel(filtered, winner);
+      spinning = false;
+      document.getElementById('spin-btn').disabled = false;
+
+      setTimeout(() => showResult(filtered[winner]), 400);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+// ── SHOW RESULT ──
+function showResult(listing) {
+  document.getElementById('result-tag').textContent  = listing.category;
+  document.getElementById('result-name').textContent = listing.name;
+  document.getElementById('result-desc').textContent = listing.description || '';
+
+  const meta = document.getElementById('result-meta');
+  meta.innerHTML = '';
+  if (listing.priceLabel) {
+    meta.innerHTML += `<div class="meta-pill">💰 ${listing.priceLabel}</div>`;
+  }
+  if (listing.isOpenNow !== undefined) {
+    meta.innerHTML += listing.isOpenNow
+      ? `<div class="meta-pill" style="color:var(--green)">● Open now</div>`
+      : `<div class="meta-pill" style="color:#ff6b6b">● Closed</div>`;
+  }
+
+  const link = document.getElementById('result-link');
+  if (listing.website) {
+    link.href = listing.website;
+    link.style.display = '';
+  } else {
+    link.style.display = 'none';
+  }
+
+  document.getElementById('result-overlay').classList.add('show');
+}
+
+document.getElementById('close-btn').addEventListener('click', () => {
+  document.getElementById('result-overlay').classList.remove('show');
+});
+document.getElementById('result-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget)
+    document.getElementById('result-overlay').classList.remove('show');
+});
+
+// Initial state
+updateFiltered();
+</script>
+</body>
+</html>
