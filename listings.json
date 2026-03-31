@@ -212,7 +212,7 @@
     "lng": -77.0934,
     "phone": "(240) 644-1100",
     "website": "https://www.roundhousetheatre.org",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: Box office closed",
       "Tuesday: 12:00 PM \u2013 6:00 PM",
@@ -246,7 +246,7 @@
     "lng": -77.1147,
     "phone": "(301) 581-5100",
     "website": "https://www.strathmore.org",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: Box office closed",
       "Tuesday: 10:00 AM \u2013 6:00 PM",
@@ -852,7 +852,7 @@
     "lng": -76.9968,
     "phone": "(202) 544-1059",
     "website": "https://www.labyrinthdc.com",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: Closed",
       "Tuesday: 11:00 AM \u2013 10:00 PM",
