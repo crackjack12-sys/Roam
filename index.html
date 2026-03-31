@@ -40,6 +40,39 @@
     .loc-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
     .tagline { font-size: 13px; color: var(--muted); margin-top: 4px; }
 
+    /* ── SEARCH BAR ── */
+    .search-wrap { padding: 16px 20px 0; }
+    .search-box {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 0 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-box:focus-within {
+      border-color: rgba(200,245,96,0.4);
+      box-shadow: 0 0 0 3px rgba(200,245,96,0.08);
+    }
+    .search-icon { color: var(--dim); flex-shrink: 0; }
+    .search-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 14px; padding: 13px 0;
+    }
+    .search-input::placeholder { color: var(--dim); }
+    .search-clear {
+      background: none; border: none; color: var(--dim);
+      cursor: pointer; font-size: 13px; padding: 4px;
+      border-radius: 50%; display: none; transition: color 0.15s;
+      flex-shrink: 0; line-height: 1;
+    }
+    .search-clear:hover { color: var(--text); }
+    .search-clear.visible { display: block; }
+    .search-hint { font-size: 12px; color: var(--dim); margin-top: 7px; padding-left: 2px; min-height: 16px; }
+
+    /* hide non-matching cards */
+    .activity-card.search-hidden { display: none !important; }
+    .featured-wrap.search-hidden { display: none !important; }
+
     /* ── DATE STRIP ── */
     .date-strip { display: flex; gap: 8px; padding: 16px 20px 0; overflow-x: auto; scrollbar-width: none; }
     .date-strip::-webkit-scrollbar { display: none; }
@@ -55,6 +88,25 @@
     /* ── SECTION LABEL ── */
     .section-label { padding: 20px 20px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
     .section-label span { color: var(--accent); }
+
+    /* ── SPIN BANNER ── */
+    .spin-banner {
+      margin: 16px 20px 0;
+      background: linear-gradient(135deg, #1a1f0e 0%, #161616 100%);
+      border: 1px solid rgba(200,245,96,0.2);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; text-decoration: none;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .spin-banner:active { transform: scale(0.98); }
+    .spin-banner:hover { border-color: rgba(200,245,96,0.4); }
+    .spin-banner-left { display: flex; align-items: center; gap: 12px; }
+    .spin-banner-icon { font-size: 28px; line-height: 1; }
+    .spin-banner-text strong { display: block; font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .spin-banner-text span { font-size: 12px; color: var(--muted); }
+    .spin-banner-cta { font-size: 12px; font-weight: 600; color: var(--accent); white-space: nowrap; }
 
     /* ── FEATURED CARD ── */
     .featured-wrap { padding: 0 20px; }
@@ -96,6 +148,12 @@
     .price-paid { color: var(--orange); }
     .chevron { color: var(--dim); font-size: 16px; line-height: 1; }
 
+    /* ── NO SEARCH RESULTS ── */
+    .search-empty { display: none; text-align: center; padding: 48px 20px; color: var(--muted); }
+    .search-empty.show { display: block; }
+    .search-empty .empty-icon { font-size: 36px; margin-bottom: 10px; }
+    .search-empty p { font-size: 14px; }
+
     /* ── EMPTY STATE ── */
     .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
     .empty-icon { font-size: 40px; margin-bottom: 12px; }
@@ -133,13 +191,41 @@
     <div class="tagline">What's open today near you</div>
   </div>
 
+  <!-- SEARCH BAR -->
+  <div class="search-wrap animate delay-1">
+    <div class="search-box">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="search-input" class="search-input" placeholder="Search activities, vibes, places…" autocomplete="off" />
+      <button class="search-clear" id="search-clear" aria-label="Clear">✕</button>
+    </div>
+    <div class="search-hint" id="search-hint"></div>
+  </div>
+
   <div class="date-strip animate delay-1" id="dateStrip"></div>
   <div class="filters animate delay-2" id="filters"></div>
+
+  <!-- SPIN WHEEL BANNER -->
+  <a href="spin.html" class="spin-banner animate delay-2">
+    <div class="spin-banner-left">
+      <div class="spin-banner-icon">🎰</div>
+      <div class="spin-banner-text">
+        <strong>Not sure what to do?</strong>
+        <span>Spin the wheel — we'll pick for you</span>
+      </div>
+    </div>
+    <div class="spin-banner-cta">Spin →</div>
+  </a>
 
   <div id="featuredSection"></div>
 
   <div class="section-label animate delay-3">Everything open <span id="openCount"></span></div>
   <div class="card-list animate delay-4" id="cardList"></div>
+  <div class="search-empty" id="search-empty">
+    <div class="empty-icon">🔍</div>
+    <p>No results for "<span id="search-empty-term"></span>"</p>
+  </div>
 
   <div style="height: 20px;"></div>
 </div>
@@ -150,9 +236,9 @@
     <span class="nav-icon">⚡</span>
     <span class="nav-label">Today</span>
   </a>
-  <a href="browse.html" class="nav-item">
-    <span class="nav-icon">🗂</span>
-    <span class="nav-label">Browse</span>
+  <a href="spin.html" class="nav-item">
+    <span class="nav-icon">🎰</span>
+    <span class="nav-label">Spin</span>
   </a>
   <a href="map.html" class="nav-item">
     <span class="nav-icon">🗺</span>
@@ -169,12 +255,12 @@
   const ICONS = {
     'Outdoors': '🌳', 'Education': '📚', 'Arts': '🎨',
     'Activities': '🎯', 'Entertainment': '🎬', 'Fitness': '🏊',
-    'Sports': '⚽', 'Food': '🍔', 'default': '📍'
+    'Sports': '⚽', 'Food': '🍔', 'Chill': '😌', 'Culture': '🏛',
+    'Seasonal': '🌸', 'Unique': '✨', 'default': '📍'
   };
 
   // ── DATE STRIP ──
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const today = new Date();
   const strip = document.getElementById('dateStrip');
   for (let i = 0; i < 5; i++) {
@@ -191,15 +277,16 @@
 
   // ── FILTER CHIPS ──
   const filterDefs = [
-    { key: 'all',     label: 'All' },
-    { key: 'free',    label: '🟢 Free' },
-    { key: 'cheap',   label: '🟡 Under $10' },
-    { key: 'paid',    label: '🔴 Paid' },
+    { key: 'all',          label: 'All' },
+    { key: 'free',         label: '🟢 Free' },
+    { key: 'cheap',        label: '🟡 Under $10' },
+    { key: 'paid',         label: '🔴 Paid' },
     { key: 'Outdoors',     label: 'Outdoors' },
     { key: 'Activities',   label: 'Activities' },
     { key: 'Entertainment',label: 'Entertainment' },
     { key: 'Arts',         label: 'Arts' },
-    { key: 'Fitness',      label: 'Fitness' },
+    { key: 'Chill',        label: 'Chill' },
+    { key: 'Food',         label: 'Food' },
   ];
   const filtersEl = document.getElementById('filters');
   filterDefs.forEach(f => {
@@ -229,7 +316,7 @@
     if (!listing) { section.innerHTML = ''; return; }
     section.innerHTML = `
       <div class="section-label animate delay-2">✦ <span>Featured today</span></div>
-      <div class="featured-wrap animate delay-2">
+      <div class="featured-wrap animate delay-2" data-name="${listing.name}" data-category="${listing.category}" data-description="${listing.description}">
         <div class="featured-card" onclick="window.location='detail.html?id=${listing.id}'">
           <div class="featured-badge">FEATURED</div>
           <h2>${listing.name}</h2>
@@ -249,18 +336,16 @@
 
   // ── RENDER CARD LIST ──
   function renderListings(listings) {
-    const list = document.getElementById('cardList');
+    const list    = document.getElementById('cardList');
     const countEl = document.getElementById('openCount');
 
-    // Filter
     let filtered = listings.filter(l => !l.featured);
-    if (activeFilter === 'free') filtered = filtered.filter(l => l.priceTier === 'free');
+    if (activeFilter === 'free')       filtered = filtered.filter(l => l.priceTier === 'free');
     else if (activeFilter === 'cheap') filtered = filtered.filter(l => l.priceTier === 'cheap');
-    else if (activeFilter === 'paid') filtered = filtered.filter(l => l.priceTier === 'paid');
-    else if (activeFilter !== 'all') filtered = filtered.filter(l => l.category === activeFilter);
+    else if (activeFilter === 'paid')  filtered = filtered.filter(l => l.priceTier === 'paid');
+    else if (activeFilter !== 'all')   filtered = filtered.filter(l => l.category === activeFilter);
 
-    // Open ones first
-    const open = filtered.filter(l => l.isOpenNow);
+    const open   = filtered.filter(l => l.isOpenNow);
     const closed = filtered.filter(l => !l.isOpenNow);
     const sorted = [...open, ...closed];
 
@@ -272,7 +357,12 @@
     }
 
     list.innerHTML = sorted.map(l => `
-      <a href="detail.html?id=${l.id}" class="activity-card${l.isOpenNow ? '' : ' closed'}">
+      <a href="detail.html?id=${l.id}"
+         class="activity-card${l.isOpenNow ? '' : ' closed'}"
+         data-name="${l.name}"
+         data-category="${l.category}"
+         data-description="${(l.description || '').replace(/"/g, '&quot;')}"
+         data-address="${(l.address || '').replace(/"/g, '&quot;')}">
         <div class="card-icon">${ICONS[l.category] || ICONS.default}</div>
         <div class="card-body">
           <h3>${l.name}</h3>
@@ -288,6 +378,10 @@
           <span class="chevron">›</span>
         </div>
       </a>`).join('');
+
+    // re-apply any active search after re-render
+    const q = document.getElementById('search-input').value.trim();
+    if (q) runSearch(q);
   }
 
   // ── LOAD DATA ──
@@ -303,6 +397,52 @@
       document.getElementById('cardList').innerHTML =
         `<div class="empty"><div class="empty-icon">⚠️</div><h3>Couldn't load listings</h3><p>Make sure listings.json is in the same folder</p></div>`;
     });
+
+  // ── SEARCH ──
+  function runSearch(query) {
+    const q         = query.trim().toLowerCase();
+    const cards     = document.querySelectorAll('.activity-card');
+    const featured  = document.querySelector('.featured-wrap');
+    const emptyMsg  = document.getElementById('search-empty');
+    const emptyTerm = document.getElementById('search-empty-term');
+    const hint      = document.getElementById('search-hint');
+    let visible     = 0;
+
+    cards.forEach(card => {
+      if (!q) { card.classList.remove('search-hidden'); visible++; return; }
+      const text = [
+        card.dataset.name        || '',
+        card.dataset.category    || '',
+        card.dataset.description || '',
+        card.dataset.address     || '',
+      ].join(' ').toLowerCase();
+
+      if (text.includes(q)) { card.classList.remove('search-hidden'); visible++; }
+      else                  { card.classList.add('search-hidden'); }
+    });
+
+    // also filter featured card
+    if (featured) {
+      if (!q) {
+        featured.classList.remove('search-hidden');
+      } else {
+        const text = [featured.dataset.name, featured.dataset.category, featured.dataset.description].join(' ').toLowerCase();
+        featured.classList.toggle('search-hidden', !text.includes(q));
+      }
+    }
+
+    emptyMsg.classList.toggle('show', q.length > 0 && visible === 0);
+    if (q && visible === 0) emptyTerm.textContent = query.trim();
+    hint.textContent = q ? (visible === 0 ? 'No results' : `${visible} result${visible === 1 ? '' : 's'}`) : '';
+    document.getElementById('search-clear').classList.toggle('visible', q.length > 0);
+  }
+
+  document.getElementById('search-input').addEventListener('input', e => runSearch(e.target.value));
+  document.getElementById('search-clear').addEventListener('click', () => {
+    document.getElementById('search-input').value = '';
+    runSearch('');
+    document.getElementById('search-input').focus();
+  });
 </script>
 </body>
 </html>
