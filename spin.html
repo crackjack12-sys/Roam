@@ -282,6 +282,49 @@
     }
     .result-overlay.show { display: flex; }
 
+    /* confetti burst */
+    .confetti-piece {
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 200;
+      animation: confettiFall 1.2s ease-out forwards;
+    }
+    @keyframes confettiFall {
+      0%   { transform: translate(0,0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) rotate(720deg); opacity: 0; }
+    }
+
+    /* open now badge */
+    .open-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: rgba(61,255,160,0.12);
+      border: 1px solid rgba(61,255,160,0.3);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .open-badge::before { content: '●'; font-size: 8px; }
+    .closed-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: rgba(255,107,107,0.1);
+      border: 1px solid rgba(255,107,107,0.25);
+      color: #ff6b6b;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .closed-badge::before { content: '●'; font-size: 8px; }
+
     .result-card {
       background: var(--surface);
       border: 1px solid rgba(255,255,255,0.12);
@@ -407,7 +450,15 @@
         gap: 32px;
       }
       .filters-panel { position: static; }
-      .wheel-wrap, #wheel-canvas, .empty-wheel {
+      .wheel-wrap {
+        width: 300px;
+        height: 300px;
+      }
+      #wheel-canvas {
+        width: 300px !important;
+        height: 300px !important;
+      }
+      .empty-wheel {
         width: 300px;
         height: 300px;
       }
@@ -473,7 +524,7 @@
     <div class="wheel-wrap" id="wheel-wrap">
       <div class="empty-wheel" id="empty-state">
         <span class="emoji">🎯</span>
-        <span>Pick some filters and<br>we'll load the wheel</span>
+        <span>No activities match<br>those filters — try loosening them!</span>
       </div>
       <canvas id="wheel-canvas" style="display:none;"></canvas>
       <div class="wheel-pointer" id="pointer" style="display:none;"></div>
@@ -542,19 +593,19 @@ const activeFilters = { vibe: [], price: [], setting: [] };
 
 // ── FETCH LISTINGS ──
 fetch('listings.json')
-  .then(r => r.json())
+  .then(r => {
+    if (!r.ok) throw new Error('listings.json not found');
+    return r.json();
+  })
   .then(data => {
     listings = data;
     updateFiltered();
   })
   .catch(() => {
-    // fallback sample data so wheel still works
-    listings = [
-      { name: "Escape Quest", category: "Activities", priceTier: "paid", description: "Do a booked escape room with friends at Escape Quest.", website: "https://www.escapequest.com", priceLabel: "From $28/person" },
-      { name: "Bowlero", category: "Activities", priceTier: "paid", description: "Glow bowling, arcade games, and late nights in Bethesda.", website: "https://www.bowlero.com", priceLabel: "$20–$27" },
-      { name: "National Mall at Night", category: "Chill", priceTier: "free", description: "Walk from Lincoln Memorial to Washington Monument at night.", website: "https://www.nps.gov/nama", priceLabel: "Free" },
-    ];
-    updateFiltered();
+    // This happens when opening spin.html directly as a file instead of through Netlify.
+    // Always test via your deployed Netlify URL, not by double-clicking the file.
+    console.warn('Could not load listings.json — make sure this is running on Netlify, not opened as a local file.');
+    document.getElementById('count-bar').innerHTML = '⚠️ Could not load listings — open this via your Netlify URL, not as a local file.';
   });
 
 // ── CHIP INTERACTION ──
@@ -592,6 +643,7 @@ function updateFiltered() {
 
   if (filtered.length >= 2) {
     btn.disabled = false;
+    btn.textContent = 'Spin the Wheel 🎰';
     drawWheel(filtered);
     document.getElementById('empty-state').style.display  = 'none';
     document.getElementById('wheel-canvas').style.display = 'block';
@@ -599,6 +651,7 @@ function updateFiltered() {
     document.getElementById('cap').style.display          = 'flex';
   } else {
     btn.disabled = true;
+    btn.textContent = 'No matches — try different filters';
     document.getElementById('empty-state').style.display  = 'flex';
     document.getElementById('wheel-canvas').style.display = 'none';
     document.getElementById('pointer').style.display      = 'none';
@@ -694,11 +747,12 @@ function spinWheel() {
     if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
-      currentAngle = targetAngle % (2 * Math.PI);
-      // figure out which segment the pointer (pointing left, at angle π) landed on
-      const arc     = (2 * Math.PI) / filtered.length;
-      const pointer = (Math.PI - currentAngle + 2 * Math.PI) % (2 * Math.PI);
-      const winner  = Math.floor(pointer / arc) % filtered.length;
+      // Normalize to positive angle
+      currentAngle = ((targetAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      // Pointer is on the RIGHT at angle 0. Find which segment contains angle 0.
+      const arc      = (2 * Math.PI) / filtered.length;
+      const normalized = (2 * Math.PI - currentAngle) % (2 * Math.PI);
+      const winner   = Math.floor(normalized / arc) % filtered.length;
 
       drawWheel(filtered, winner);
       spinning = false;
@@ -712,6 +766,22 @@ function spinWheel() {
 }
 
 // ── SHOW RESULT ──
+function spawnConfetti() {
+  const colors = ['#ff5c35','#ffb347','#3dffa0','#5c9eff','#b47aff','#ffd166'];
+  for (let i = 0; i < 30; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = (30 + Math.random() * 40) + 'vw';
+    el.style.top  = (20 + Math.random() * 30) + 'vh';
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    el.style.setProperty('--tx', (Math.random() * 200 - 100) + 'px');
+    el.style.setProperty('--ty', (Math.random() * 200 + 50) + 'px');
+    el.style.animationDelay = (Math.random() * 0.3) + 's';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1600);
+  }
+}
+
 function showResult(listing) {
   document.getElementById('result-tag').textContent  = listing.category;
   document.getElementById('result-name').textContent = listing.name;
@@ -724,8 +794,8 @@ function showResult(listing) {
   }
   if (listing.isOpenNow !== undefined) {
     meta.innerHTML += listing.isOpenNow
-      ? `<div class="meta-pill" style="color:var(--green)">● Open now</div>`
-      : `<div class="meta-pill" style="color:#ff6b6b">● Closed</div>`;
+      ? `<span class="open-badge">Open now</span>`
+      : `<span class="closed-badge">Closed</span>`;
   }
 
   const link = document.getElementById('result-link');
@@ -736,6 +806,7 @@ function showResult(listing) {
     link.style.display = 'none';
   }
 
+  spawnConfetti();
   document.getElementById('result-overlay').classList.add('show');
 }
 
@@ -747,8 +818,9 @@ document.getElementById('result-overlay').addEventListener('click', e => {
     document.getElementById('result-overlay').classList.remove('show');
 });
 
-// Initial state
+// Initial state — show all listings immediately, wheel ready to spin
 updateFiltered();
+
 </script>
 </body>
 </html>
