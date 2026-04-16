@@ -42,7 +42,7 @@
     "lng": -77.1553,
     "phone": "(800) 376-9282",
     "website": "https://www.zavazone.com/rockville/",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: 10:00 AM \u2013 2:00 PM",
       "Tuesday: Closed",
@@ -110,7 +110,7 @@
     "lng": -77.2153,
     "phone": "(301) 977-9200",
     "website": "https://www.shadowlandlaser.com",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: Closed",
       "Tuesday: Closed",
