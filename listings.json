@@ -110,7 +110,7 @@
     "lng": -77.2153,
     "phone": "(301) 977-9200",
     "website": "https://www.shadowlandlaser.com",
-    "isOpenNow": true,
+    "isOpenNow": false,
     "hoursToday": [
       "Monday: Closed",
       "Tuesday: Closed",
@@ -178,7 +178,7 @@
     "lng": -77.2143,
     "phone": "(301) 987-0001",
     "website": "https://www.amctheatres.com/movie-theatres/washington-dc/amc-rio-cinemas-18",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: 11:00 AM \u2013 11:00 PM",
       "Tuesday: 11:00 AM \u2013 11:00 PM",
@@ -648,7 +648,7 @@
     "lng": -77.1027,
     "phone": "(571) 297-7640",
     "website": "https://punchbowlsocial.com/location/arlington",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: 11:00 AM \u2013 12:00 AM",
       "Tuesday: 11:00 AM \u2013 12:00 AM",
