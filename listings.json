@@ -42,7 +42,7 @@
     "lng": -77.1553,
     "phone": "(800) 376-9282",
     "website": "https://www.zavazone.com/rockville/",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: 10:00 AM \u2013 2:00 PM",
       "Tuesday: Closed",
@@ -76,7 +76,7 @@
     "lng": -77.1197,
     "phone": "(301) 881-9103",
     "website": "https://www.escapequest.com",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: 12:00 PM \u2013 10:00 PM",
       "Tuesday: 12:00 PM \u2013 10:00 PM",
@@ -110,7 +110,7 @@
     "lng": -77.2153,
     "phone": "(301) 977-9200",
     "website": "https://www.shadowlandlaser.com",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: Closed",
       "Tuesday: Closed",
@@ -144,7 +144,7 @@
     "lng": -77.0934,
     "phone": "(301) 652-7273",
     "website": "https://www.landmarktheatres.com/theatre/bethesda-row-cinema/",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: 12:00 PM \u2013 10:00 PM",
       "Tuesday: 12:00 PM \u2013 10:00 PM",
@@ -246,7 +246,7 @@
     "lng": -77.1147,
     "phone": "(301) 581-5100",
     "website": "https://www.strathmore.org",
-    "isOpenNow": true,
+    "isOpenNow": false,
     "hoursToday": [
       "Monday: Box office closed",
       "Tuesday: 10:00 AM \u2013 6:00 PM",
@@ -614,7 +614,7 @@
     "lng": -77.1201,
     "phone": "(240) 630-3222",
     "website": "https://www.pinstripes.com/north-bethesda",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: 12:00 PM \u2013 9:00 PM",
       "Tuesday: 12:00 PM \u2013 9:00 PM",
