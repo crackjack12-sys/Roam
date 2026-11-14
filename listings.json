@@ -246,7 +246,7 @@
     "lng": -77.1147,
     "phone": "(301) 581-5100",
     "website": "https://www.strathmore.org",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: Box office closed",
       "Tuesday: 10:00 AM \u2013 6:00 PM",
