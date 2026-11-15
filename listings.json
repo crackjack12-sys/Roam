@@ -178,7 +178,7 @@
     "lng": -77.2143,
     "phone": "(301) 987-0001",
     "website": "https://www.amctheatres.com/movie-theatres/washington-dc/amc-rio-cinemas-18",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: 11:00 AM \u2013 11:00 PM",
       "Tuesday: 11:00 AM \u2013 11:00 PM",
@@ -246,7 +246,7 @@
     "lng": -77.1147,
     "phone": "(301) 581-5100",
     "website": "https://www.strathmore.org",
-    "isOpenNow": true,
+    "isOpenNow": false,
     "hoursToday": [
       "Monday: Box office closed",
       "Tuesday: 10:00 AM \u2013 6:00 PM",
@@ -280,7 +280,7 @@
     "lng": -77.0956,
     "phone": "(301) 652-9972",
     "website": "https://www.bethesdabluesjazz.com",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: Closed",
       "Tuesday: Closed",
@@ -648,7 +648,7 @@
     "lng": -77.1027,
     "phone": "(571) 297-7640",
     "website": "https://punchbowlsocial.com/location/arlington",
-    "isOpenNow": false,
+    "isOpenNow": true,
     "hoursToday": [
       "Monday: 11:00 AM \u2013 12:00 AM",
       "Tuesday: 11:00 AM \u2013 12:00 AM",
@@ -988,7 +988,7 @@
     "lng": -77.0934,
     "phone": "(301) 656-2255",
     "website": "https://www.goodwillexcel.org",
-    "isOpenNow": true,
+    "isOpenNow": false,
     "hoursToday": [
       "Monday: 9:00 AM \u2013 8:00 PM",
       "Tuesday: 9:00 AM \u2013 8:00 PM",
